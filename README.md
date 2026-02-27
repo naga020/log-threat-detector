@@ -25,3 +25,10 @@ detects potential attacks, and maps them to MITRE ATT&CK techniques.
 
 ## How to Run
 python -m dashboard.app
+
+## Security Concepts Demonstrated
+- Log-based threat detection
+- Brute force attack detection
+- SQL injection detection
+- MITRE ATT&CK technique mapping
+- Severity classification model

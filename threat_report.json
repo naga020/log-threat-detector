@@ -1,0 +1,17 @@
+{
+    "generated_at": "2026-02-17 10:17:54",
+    "alerts": [
+        {
+            "ip": "192.168.1.10",
+            "attack_type": "Brute Force Attack",
+            "event_count": 1,
+            "severity": "HIGH"
+        },
+        {
+            "ip": "192.168.1.20",
+            "attack_type": "Port Scan Detected",
+            "event_count": 5,
+            "severity": "HIGH"
+        }
+    ]
+}

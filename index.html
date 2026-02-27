@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Threat SOC Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #020617;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .card {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background: #020617;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        th {
+            background: #1e293b;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .HIGH { background: #dc2626; }
+        .MEDIUM { background: #f59e0b; }
+        .LOW { background: #16a34a; }
+    </style>
+</head>
+
+<body>
+    {% if success %}
+<div style="color: lightgreen; padding:10px; text-align:center;">
+    ✅ Log file uploaded and processed successfully.
+</div>
+    {% endif %}
+    <div style="padding:20px;">
+    <form action="/upload_logs" method="POST" enctype="multipart/form-data">
+        <input type="file" name="logfile" required>
+        <button type="submit">Upload Log File</button>
+    </form>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; padding: 0 40px;">
+
+    <div style="text-align:left;">
+        <h1>🚨 SOC Threat Monitoring Dashboard</h1>
+        <h3>Total Alerts: {{ alerts|length }}</h3>
+    </div>
+
+    <div style="text-align:right;">
+        <p>
+            👤 <b>{{ current_user.id }}</b>
+
+            {% if current_user.role == "admin" %}
+                <span style="
+                    background-color:#dc2626;
+                    padding:6px 12px;
+                    border-radius:20px;
+                    font-size:12px;
+                    margin-left:8px;">
+                    ADMIN
+                </span>
+            {% else %}
+                <span style="
+                    background-color:#475569;
+                    padding:6px 12px;
+                    border-radius:20px;
+                    font-size:12px;
+                    margin-left:8px;">
+                    VIEWER
+                </span>
+            {% endif %}
+        </p>
+
+        <a href="{{ url_for('logout') }}" style="color:#38bdf8;">Logout</a>
+    </div>
+
+</div>
+
+<div class="grid">
+
+    <div class="card">
+        <h3>Attack Distribution</h3>
+        <canvas id="attackChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>Severity Distribution</h3>
+        <canvas id="severityChart"></canvas>
+    </div>
+
+</div>
+
+<div class="card">
+<h3>🔥 Top Attacking IPs</h3>
+
+<table>
+<tr>
+    <th>IP</th>
+    <th>Attempts</th>
+</tr>
+
+{% for ip, count in top_ips %}
+<tr>
+    <td>{{ ip }}</td>
+    <td>{{ count }}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+<br>
+
+<div class="card">
+<h3>📜 Alert Logs</h3>
+
+<table>
+<tr>
+    <th>IP</th>
+    <th>Attack</th>
+    <th>Events</th>
+    <th>Severity</th>
+    <th>Time</th>
+</tr>
+
+{% for alert in alerts %}
+<tr>
+    <td>{{ alert.ip }}</td>
+    <td>{{ alert.attack_type }}</td>
+    <td>{{ alert.event_count }}</td>
+    <td><span class="badge {{ alert.severity }}">{{ alert.severity }}</span></td>
+    <td> {{ alert.timestamp if alert.timestamp else 'N/A' }}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+<!-- Chart Script -->
+<script>
+const attackData = {{ attack_count | tojson }};
+const severityData = {{ severity_count | tojson }};
+
+new Chart(document.getElementById("attackChart"), {
+    type: "pie",
+    data: {
+        labels: Object.keys(attackData),
+        datasets: [{
+            data: Object.values(attackData)
+        }]
+    }
+});
+
+new Chart(document.getElementById("severityChart"), {
+    type: "bar",
+    data: {
+        labels: Object.keys(severityData),
+        datasets: [{
+            data: Object.values(severityData)
+        }]
+    }
+});
+</script>
+
+<!-- Auto Refresh Script -->
+<script>
+function refreshDashboard() {
+    fetch("/api/alerts")
+        .then(res => res.json())
+        .then(data => {
+            console.log("Updated Alerts:", data);
+            location.reload();
+        });
+}
+
+setInterval(refreshDashboard, 10000);
+</script>
+
+</body>
+</html>
